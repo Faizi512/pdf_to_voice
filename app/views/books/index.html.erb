@@ -1,0 +1,118 @@
+<!-- app/views/books/index.html.erb -->
+
+<div class="min-h-screen w-full flex-row flex flex-auto items-center justify-center bg-gray-100">
+  <div class="max-w-lg w-full mx-auto p-8 bg-white rounded-lg shadow-lg">
+    <h1 class="text-3xl font-semibold mb-6 text-center">PDF to Audiobook Converter</h1>
+    <%= form_with(url: books_upload_path, method: :post, multipart: true, class: "mb-6", id: "convertForm") do |form| %>
+      <div class="flex flex-col items-center justify-center">
+        <label for="pdf_file" class="mb-2 text-lg font-semibold">Upload PDF:</label>
+        <div class="relative">
+          <%= form.file_field :pdf_file, class: "bg-gray-200 rounded-lg px-4 py-2 w-full" %>
+        </div>
+      </div>
+      <div class="mt-4">
+        <%= form.submit "Convert to Audiobook", class: "px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full", id: "convertButton" %>
+      </div>
+    <% end %>
+    <div id="loading" class="hidden text-center mt-4">
+      <p>Generating the audio...</p>
+      <div class="loading-dots-container">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+    </div>
+    <div id="downloadContainer" class="hidden text-center mt-4">
+      <a id="downloadLink" href="/download_audio" download="audio.mp3">
+        <button id="downloadButton" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Download Audiobook</button>
+      </a>
+    </div>
+  </div>
+  <% @name = FileModel.last.name %>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("convertForm").addEventListener("submit", function(event) {
+      // Show loading animation before form submission
+      event.preventDefault();
+      document.getElementById("loading").classList.remove("hidden");
+      document.getElementById("convertButton").classList.add("hidden");
+
+      // Submit the form
+      fetch(event.target.action, {
+        method: 'POST',
+        body: new FormData(event.target)
+      }).then(response => {
+
+        // Check if response is succesxsful
+        if (response.ok) {
+          
+          var base64AudioData = '<%= raw @file.to_s %>';
+          // Hide loading animation after successful response
+          document.getElementById("loading").classList.add("hidden");
+          
+          document.getElementById("convertButton").value="Converted"
+          // Show download button
+          document.getElementById("downloadContainer").classList.remove("hidden");
+          
+          // Handle click event for download button
+          // document.getElementById("downloadButton").addEventListener("click", function() {
+          //   var a = document.createElement('a');
+          //   a.style.display = 'none';
+          //   debugger
+          //   var file_name = "audio.mp3"
+            
+          //   a.href = "app/services/audio/"+file_name;
+          //   a.download = 'audio.mp3';
+
+          //   // Append the anchor to the body and click it
+          //   document.body.appendChild(a);
+          //   a.click();
+
+          //   // Clean up
+          //   document.body.removeChild(a);
+          //   // Clean up
+          //   window.URL.revokeObjectURL(url);
+          //   document.body.removeChild(a);
+          // });
+        } else {
+          // Handle error
+          // For example, display an error message
+        }
+      }).catch(error => {
+        // Handle error
+        // For example, display an error message
+      }).finally(() => {
+        // Show the submit button again
+        document.getElementById("convertButton").classList.remove("hidden");
+      });
+    });
+  });
+
+  // Function to convert Base64 to Blob
+  function base64toBlob(base64Data, contentType) {
+    contentType = contentType || '';
+    var sliceSize = 1024;
+    var byteCharacters = atob(base64Data);
+    var byteArrays = [];
+    
+    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      var slice = byteCharacters.slice(offset, offset + sliceSize);
+      
+      var byteNumbers = new Array(slice.length);
+      for (var i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      
+      var byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+    
+    var blob = new Blob(byteArrays, { type: contentType });
+    return blob;
+  }
+</script>

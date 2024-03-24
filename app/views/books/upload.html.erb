@@ -1,0 +1,22 @@
+<!-- app/views/books/upload.html.erb -->
+
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <% if @audio_data.present? %>
+    <div class="max-w-lg w-full mx-auto p-8 bg-white rounded-lg shadow-lg">
+      <h2 class="text-lg font-semibold mb-4">Audiobook Conversion Complete!</h2>
+      <div class="flex flex-col items-center justify-center mt-4">
+        <audio controls class="w-full">
+          <source src="data:audio/mpeg;base64, <%= Base64.strict_encode64(@audio_data) %>" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </div>
+  <% else %>
+    <div class="max-w-lg w-full mx-auto p-8 bg-white rounded-lg shadow-lg">
+      <h2 class="text-lg font-semibold mb-4">No conversion in Progress</h2>
+      <div id="progress-bar" class="w-full bg-gray-200 rounded-lg overflow-hidden">
+        <div id="progress" class="h-2 bg-blue-500"></div>
+      </div>
+    </div>
+  <% end %>
+</div>

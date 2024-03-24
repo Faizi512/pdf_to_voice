@@ -1,0 +1,2 @@
+class FileModel < ApplicationRecord
+end
