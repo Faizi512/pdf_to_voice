@@ -30,8 +30,14 @@
         <button id="downloadButton" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Download Audiobook</button>
       </a>
     </div>
+
+    <div class="text-center mt-4 hidden" id="or-text">
+      <span class="text-gray-500">or</span>
+    </div>
+    <div id="audioPlayer" class="text-center mt-4 hidden audioCenter">
+  
+    </div>
   </div>
-  <% @name = FileModel.last.name %>
 </div>
 
 <script>
@@ -41,54 +47,38 @@
       event.preventDefault();
       document.getElementById("loading").classList.remove("hidden");
       document.getElementById("convertButton").classList.add("hidden");
-
+      
       // Submit the form
       fetch(event.target.action, {
         method: 'POST',
         body: new FormData(event.target)
       }).then(response => {
-
-        // Check if response is succesxsful
+        // Check if response is successful
         if (response.ok) {
-          
-          var base64AudioData = '<%= raw @file.to_s %>';
           // Hide loading animation after successful response
           document.getElementById("loading").classList.add("hidden");
-          
-          document.getElementById("convertButton").value="Converted"
+          document.getElementById("convertButton").value = "Converted";
+
           // Show download button
           document.getElementById("downloadContainer").classList.remove("hidden");
-          
-          // Handle click event for download button
-          // document.getElementById("downloadButton").addEventListener("click", function() {
-          //   var a = document.createElement('a');
-          //   a.style.display = 'none';
-          //   debugger
-          //   var file_name = "audio.mp3"
-            
-          //   a.href = "app/services/audio/"+file_name;
-          //   a.download = 'audio.mp3';
+          document.getElementById("or-text").classList.remove("hidden");
 
-          //   // Append the anchor to the body and click it
-          //   document.body.appendChild(a);
-          //   a.click();
+          var audioPlayer = document.getElementById("audioPlayer");
+          audioPlayer.classList.remove("hidden");
+          var audioSource = document.getElementById("audioSource");
+          var audioControl = document.getElementById("audioControl");
+          audioPlayer.classList.add("audioCenter");
+          audioPlayer.classList.add("flex");
 
-          //   // Clean up
-          //   document.body.removeChild(a);
-          //   // Clean up
-          //   window.URL.revokeObjectURL(url);
-          //   document.body.removeChild(a);
-          // });
+          const audioElement = document.getElementById("audioSource");
+
+          // reloadAudioPlayer();
+          // Call the function to render the partial when needed
+          renderPlayerPartial();
         } else {
           // Handle error
           // For example, display an error message
         }
-      }).catch(error => {
-        // Handle error
-        // For example, display an error message
-      }).finally(() => {
-        // Show the submit button again
-        document.getElementById("convertButton").classList.remove("hidden");
       });
     });
   });
@@ -115,4 +105,31 @@
     var blob = new Blob(byteArrays, { type: contentType });
     return blob;
   }
+
+  function renderPlayerPartial() {
+    fetch('/player_partial', { method: 'GET' })
+      .then(response => response.text())
+      .then(data => {
+        // Inject the fetched partial HTML into the DOM
+        document.getElementById('audioPlayer').innerHTML = data;
+      })
+      .catch(error => {
+        console.error('Error fetching player partial:', error);
+      });
+  }
+
+  function reloadAudioPlayer() {
+    console.log("I'm here")
+    fetch('/audio')
+      .then(response => response.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audioElement = document.getElementById("audioPlayer");
+        audioElement.src = url;
+      })
+      .catch(error => {
+        console.error('Error fetching audio file:', error);
+      });
+  }
 </script>
+

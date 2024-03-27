@@ -2,28 +2,10 @@ require 'pdf/reader'
 
 class BooksController < ApplicationController
   def index
-    # Your index action code here
-    # FileModel.last&.destroy
   end
 
   def upload
-    # Your file upload action code here
-    pdf_text = ""
-    # debugger
-
-    # Open the PDF file for streaming processing
-    PDF::Reader.open(params[:pdf_file].tempfile) do |reader|
-      # Iterate over each page in the PDF
-      reader.pages.each_with_index do |page, index|
-        # Extract text from the current page and append it to the text string
-        if index > 10
-          next
-        else
-          pdf_text << page.text
-        end
-      end
-    end
-
+    pdf_text = extract_text_from_pdf(params[:pdf_file].tempfile)
     # Convert text to audio using play.ht service object
     play_ht_service = PlayHtService.new
     @audio_data = play_ht_service.convert_text_to_audio(pdf_text)
@@ -38,7 +20,7 @@ class BooksController < ApplicationController
     @file =  tmp_file.path
     # tmp_file.close
     # tmp_file.unlink
-    FileModel.create!(name: @file)
+    # FileModel.create!(name: @file)
 
     file_name = 'audio.mp3'
 
@@ -69,6 +51,14 @@ class BooksController < ApplicationController
     # tmp_file.unlink
   end
 
+  # def upload
+  #   debugger
+  #   text_ser = PdfToTextService.new
+  #   text = text_ser.convert_pdf_to_text(params[:pdf_file].tempfile)
+  #   debugger
+  #   puts text
+  # end
+
   def download_audio
     # Specify the path to the audio file
     file_path = Rails.root.join('app', 'services', 'audio', 'audio.mp3')
@@ -77,17 +67,37 @@ class BooksController < ApplicationController
     send_file(file_path, filename: 'audio.mp3', type: 'audio/mp3')
   end
 
-  private
+  def audio
+    send_file Rails.root.join('app', 'services', 'audio', 'audio.mp3'), type: 'audio/mp3', disposition: 'inline'
+  end
 
+  def player_partial
+    # Render the _player.html.erb partial
+    render partial: 'player', layout: false
+  end
+
+  private
+  
   def extract_text_from_pdf(pdf_file)
-    # You'll need to implement PDF text extraction logic here
-    # For simplicity, let's assume you're using a gem like pdf-reader
-    reader = PDF::Reader.new(pdf_file)
-    pdf_text = ''
-    reader.pages.each do |page|
-      pdf_text << page.text
+    pdf_text = ""
+    # debugger
+
+    # Open the PDF file for streaming processing
+    PDF::Reader.open(pdf_file) do |reader|
+      # Iterate over each page in the PDF
+      reader.pages.each_with_index do |page, index|
+        puts "=================#{pdf_text.size}"
+        # Extract text from the current page and append it to the text string
+        if index > 10
+          break
+        end
+        puts index
+        #   next
+        # else
+        pdf_text << page.text
+        # end
+      end
     end
-    debugger
     pdf_text
   end
 end

@@ -68,3 +68,8 @@
     transform: scale(1);
   }
 }
+
+.audioCenter{
+  flex-direction: row;
+  justify-content: center;
+}
