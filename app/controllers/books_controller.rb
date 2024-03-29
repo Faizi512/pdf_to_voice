@@ -1,11 +1,18 @@
 require 'pdf/reader'
 
+require 'rtesseract'
+require 'pdf-reader'
+require 'pdftoimage'
+
+require 'mini_magick'
+
 class BooksController < ApplicationController
   def index
   end
 
   def upload
     pdf_text = extract_text_from_pdf(params[:pdf_file].tempfile)
+    puts "I'm here"
     # Convert text to audio using play.ht service object
     play_ht_service = PlayHtService.new
     @audio_data = play_ht_service.convert_text_to_audio(pdf_text)
@@ -51,13 +58,14 @@ class BooksController < ApplicationController
     # tmp_file.unlink
   end
 
-  # def upload
-  #   debugger
-  #   text_ser = PdfToTextService.new
-  #   text = text_ser.convert_pdf_to_text(params[:pdf_file].tempfile)
-  #   debugger
-  #   puts text
-  # end
+  def upload_to_api
+    debugger
+    text_ser = PdfToTextService.new
+    text = text_ser.convert_pdf_to_text(params[:pdf_file].tempfile)
+    debugger
+    puts text
+    # render :index
+  end
 
   def download_audio
     # Specify the path to the audio file
@@ -83,21 +91,39 @@ class BooksController < ApplicationController
     # debugger
 
     # Open the PDF file for streaming processing
-    PDF::Reader.open(pdf_file) do |reader|
-      # Iterate over each page in the PDF
-      reader.pages.each_with_index do |page, index|
-        puts "=================#{pdf_text.size}"
-        # Extract text from the current page and append it to the text string
-        if index > 10
-          break
-        end
+    # PDF::Reader.open(pdf_file) do |reader|
+    #   # Iterate over each page in the PDF
+    #   reader.pages.each_with_index do |page, index|
+    #     puts "=================#{pdf_text.size}"
+    #     # Extract text from the current page and append it to the text string
+    #     if index > 10
+    #       break
+    #     end
+    #     puts index
+    #     #   next
+    #     # else
+    #     pdf_text << page.text
+    #     # end
+    #   end
+    # end
+    images = PDFToImage.open(pdf_file.path)
+    images.each_with_index do |image, index|
+      if index <= 5
+      
+        image.resize('100%').save("app/services/images/page-#{(index+1)}.png")
+        page_text = RTesseract.new("app/services/images/page-#{index+1}.png").to_s
+        pdf_text += page_text
+        puts page_text
+        puts pdf_text.size
+        File.delete("app/services/images/page-#{index+1}.png")
+      else
         puts index
-        #   next
-        # else
-        pdf_text << page.text
-        # end
+        next
       end
     end
+    # image = Rails.root.join('app', 'services', 'images', "image.png")
+    # page_text = RTesseract.new(image.to_s).to_s
+    # pdf_text = page_text
     pdf_text
   end
 end

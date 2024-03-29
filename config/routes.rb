@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   root 'books#index'
   post 'books/upload', to: 'books#upload'
+  post 'books/upload_api', to: 'books#upload_to_api'
   get 'download_audio', to: 'books#download_audio'
   get '/audio', to: 'books#audio'
   get '/player_partial', to: 'books#player_partial'

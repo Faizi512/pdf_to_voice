@@ -47,6 +47,14 @@ gem 'tailwindcss-rails'
 
 gem 'pdf-reader'
 
+gem 'pdftoimage', '~> 0.1.6'
+
+gem 'rtesseract'
+
+gem 'rmagick', '~> 5.4', '>= 5.4.4'
+
+gem 'mini_magick', '~> 4.12'
+
 # Use Sass to process CSS
 # gem "sassc-rails"
 
