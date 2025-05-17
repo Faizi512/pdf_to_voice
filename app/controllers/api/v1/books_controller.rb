@@ -45,6 +45,22 @@ module Api
         end
       end
 
+      def extract_text_from_audio
+        if params[:audio_file].present?
+          audio_file = params[:audio_file].tempfile.path
+          speech_to_text_service = AudioToTextService.new
+          extracted_text = speech_to_text_service.convert_audio_to_text(audio_file)
+
+          if extracted_text.present?
+            render json: { text: extracted_text, message: 'Text extracted successfully.' }, status: :ok
+          else
+            render json: { error: 'Failed to extract text from audio.' }, status: :unprocessable_entity
+          end
+        else
+          render json: { error: 'Audio file is required.' }, status: :unprocessable_entity
+        end
+      end
+
       private
 
       def extract_text_from_pdf(pdf_file)
