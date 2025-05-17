@@ -95,4 +95,43 @@ RSpec.describe Api::V1::BooksController, type: :controller do
       end
     end
   end
+
+  describe 'POST #extract_text_from_audio' do
+    let(:audio_file) { fixture_file_upload(Rails.root.join('spec/fixtures/sample_audio.mp3'), 'audio/mpeg') }
+
+    context 'when a valid audio file is uploaded' do
+      it 'returns the extracted text' do
+        allow_any_instance_of(AudioToTextService).to receive(:convert_audio_to_text).and_return('Extracted text from audio.')
+
+        post :extract_text_from_audio, params: { audio_file: audio_file }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response['text']).to eq('Extracted text from audio.')
+        expect(json_response['message']).to eq('Text extracted successfully.')
+      end
+    end
+
+    context 'when no audio file is uploaded' do
+      it 'returns an error response' do
+        post :extract_text_from_audio
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('Audio file is required.')
+      end
+    end
+
+    context 'when text extraction fails' do
+      it 'returns an error response' do
+        allow_any_instance_of(AudioToTextService).to receive(:convert_audio_to_text).and_return(nil)
+
+        post :extract_text_from_audio, params: { audio_file: audio_file }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('Failed to extract text from audio.')
+      end
+    end
+  end
 end
